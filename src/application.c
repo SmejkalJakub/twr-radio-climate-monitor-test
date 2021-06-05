@@ -1,23 +1,24 @@
 #include <application.h>
 
-#define BATTERY_UPDATE_INTERVAL   (2 * 1000)
+#define BATTERY_UPDATE_INTERVAL   (2000)
 
-#define UPDATE_NORMAL_INTERVAL             (1 * 1500)
-#define BAROMETER_UPDATE_NORMAL_INTERVAL   (1 * 1000)
+#define UPDATE_NORMAL_INTERVAL             (3500)
+#define BAROMETER_UPDATE_NORMAL_INTERVAL   (3500)
 
-#define TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL (1 * 1000)
+#define TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL (3500)
 
-#define HUMIDITY_TAG_PUB_NO_CHANGE_INTEVAL (1 * 1000)
+#define HUMIDITY_TAG_PUB_NO_CHANGE_INTEVAL (3500)
 
-#define LUX_METER_TAG_PUB_NO_CHANGE_INTEVAL (1 * 1000)
+#define LUX_METER_TAG_PUB_NO_CHANGE_INTEVAL (3500)
 
-#define BAROMETER_TAG_PUB_NO_CHANGE_INTEVAL (1 * 1000)
+#define BAROMETER_TAG_PUB_NO_CHANGE_INTEVAL (3500)
 
 struct {
     event_param_t temperature;
     event_param_t humidity;
     event_param_t illuminance;
     event_param_t pressure;
+    event_param_t pressureMeters;
 
 } params;
 
@@ -53,6 +54,10 @@ void battery_event_handler(twr_module_battery_event_t event, void *event_param)
         if (twr_module_battery_get_voltage(&voltage))
         {
             twr_radio_pub_battery(&voltage);
+            twr_radio_pub_temperature(TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT, &(params.temperature.value));
+            twr_radio_pub_humidity(TWR_RADIO_PUB_CHANNEL_R3_I2C0_ADDRESS_DEFAULT, &(params.humidity.value));
+            twr_radio_pub_luminosity(TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT, &(params.illuminance.value));
+            twr_radio_pub_barometer(TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT, &(params.pressure.value), &(params.pressureMeters.value));
         }
     }
 }
@@ -70,7 +75,7 @@ void climate_module_event_handler(twr_module_climate_event_t event, void *event_
         {
             if ((params.temperature.next_pub < twr_scheduler_get_spin_tick()))
             {
-                twr_radio_pub_temperature(TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT, &value);
+                //twr_radio_pub_temperature(TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT, &value);
                 params.temperature.value = value;
                 params.temperature.next_pub = twr_scheduler_get_spin_tick() + TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL;
             }
@@ -82,7 +87,7 @@ void climate_module_event_handler(twr_module_climate_event_t event, void *event_
         {
             if ((params.humidity.next_pub < twr_scheduler_get_spin_tick()))
             {
-                twr_radio_pub_humidity(TWR_RADIO_PUB_CHANNEL_R3_I2C0_ADDRESS_DEFAULT, &value);
+                //twr_radio_pub_humidity(TWR_RADIO_PUB_CHANNEL_R3_I2C0_ADDRESS_DEFAULT, &value);
                 params.humidity.value = value;
                 params.humidity.next_pub = twr_scheduler_get_spin_tick() + HUMIDITY_TAG_PUB_NO_CHANGE_INTEVAL;
             }
@@ -99,7 +104,7 @@ void climate_module_event_handler(twr_module_climate_event_t event, void *event_
             if ((params.illuminance.next_pub < twr_scheduler_get_spin_tick()) ||
                     ((value == 0) && (params.illuminance.value != 0)) || ((value > 1) && (params.illuminance.value == 0)))
             {
-                twr_radio_pub_luminosity(TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT, &value);
+                //twr_radio_pub_luminosity(TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT, &value);
                 params.illuminance.value = value;
                 params.illuminance.next_pub = twr_scheduler_get_spin_tick() + LUX_METER_TAG_PUB_NO_CHANGE_INTEVAL;
             }
@@ -118,8 +123,10 @@ void climate_module_event_handler(twr_module_climate_event_t event, void *event_
                     return;
                 }
 
-                twr_radio_pub_barometer(TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT, &value, &meter);
+                //twr_radio_pub_barometer(TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT, &value, &meter);
                 params.pressure.value = value;
+                params.pressureMeters.value = meter;
+
                 params.pressure.next_pub = twr_scheduler_get_spin_tick() + BAROMETER_TAG_PUB_NO_CHANGE_INTEVAL;
             }
         }
